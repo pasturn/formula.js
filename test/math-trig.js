@@ -686,13 +686,14 @@ describe('Math & Trig', function() {
   });
 
   it("SUMIFS", function() {
-    mathTrig.SUMIFS([1, 2, 3], '>1', '<3').should.equal(2);
-    mathTrig.SUMIFS([
-      [1, 1],
-      [2, 2],
-      [3, 3]
-    ], '>1', '<3').should.equal(4);
-    mathTrig.SUMIFS([1, 'invalid', 3], '>1', '<3').should.equal(error.value);
+    mathTrig.SUMIFS([1, 2, 3], [1, 2, 3], '<3').should.equal(3);
+    mathTrig.SUMIFS(
+      [5, 4, 15, 3, 22, 12, 10, 33],
+      ['apple', 'apple', 'artichoke', 'artichoke', 'banana', 'banana', 'carrot', 'carrot'],
+      '<>banana',
+      ['Tom', 'Sarah', 'Tom', 'Sarah', 'Tom', 'Sarah', 'Tom', 'Sarah'],
+      'Tom').should.equal(30);
+    mathTrig.SUMIFS([1, 'invalid', 3], [1, 2, 3], '<3').should.equal(error.value);
   });
 
   it('SUMPRODUCT', function() {
