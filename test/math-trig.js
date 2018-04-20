@@ -682,6 +682,8 @@ describe('Math & Trig', function() {
       [2, 2],
       [3, 3]
     ], '>2').should.equal(6);
+    mathTrig.SUMIF([1, 2, 3], '>2', [4, 5, 6]).should.equal(6);
+    mathTrig.SUMIF(['aaa', 'bbb', 'ccc'], 'bbb', [4, 5, 6]).should.equal(5);
     mathTrig.SUMIF([1, 'invalid', 3], '>2').should.equal(error.value);
   });
 
