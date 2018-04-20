@@ -49,6 +49,8 @@ describe('Statistical', function() {
       [1, 2],
       [3, 4]
     ]).should.approximately(3.5, 1e-9);
+    statistical.AVERAGEIF([3, 4, 4, 5], '4', [1, 2, 3, 4]).should.approximately(2.5, 1e-9);
+    statistical.AVERAGEIF(['aaa', 'bbb', 'bbb', 'ccc'], 'bbb', [1, 2, 3, 4]).should.approximately(2.5, 1e-9);
     statistical.AVERAGEIF([2, 4, 'invalid', 16], '>5').should.equal(error.value);
     statistical.AVERAGEIF().should.equal(error.na);
   });
