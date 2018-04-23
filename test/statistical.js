@@ -59,6 +59,12 @@ describe('Statistical', function() {
     statistical.AVERAGEIFS([2, 4, 8, 16], [1, 2, 3, 4], '>2').should.equal(12);
     statistical.AVERAGEIFS([2, 4, 8, 16], [1, 2, 3, 4], '>2', [1, 2, 3, 4], '>2').should.equal(12);
     statistical.AVERAGEIFS([2, 4, 8, 16], [1, 2, 3, 4], '>2', [1, 1, 1, 1], '>2').should.equal(0);
+    statistical.AVERAGEIFS(
+      [5, 4, 15, 3, 22, 12, 10, 33],
+      ['apple', 'apple', 'artichoke', 'artichoke', 'banana', 'banana', 'carrot', 'carrot'],
+      '<>banana',
+      ['Tom', 'Sarah', 'Tom', 'Sarah', 'Tom', 'Sarah', 'Tom', 'Sarah'],
+      'Tom').should.equal(10);
   });
 
   it('BETA.DIST', function() {
