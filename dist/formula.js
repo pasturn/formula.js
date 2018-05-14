@@ -2604,7 +2604,7 @@ exports.MODE.MULT = function() {
   var n = range.length;
   var count = {};
   var maxItems = [];
-  var max = 0;
+  var max = 1;
   var currentItem;
 
   for (var i = 0; i < n; i++) {
@@ -2614,10 +2614,15 @@ exports.MODE.MULT = function() {
       max = count[currentItem];
       maxItems = [];
     }
-    if (count[currentItem] === max) {
+    if (max > 1 && count[currentItem] === max) {
       maxItems[maxItems.length] = currentItem;
     }
   }
+
+  if (!maxItems.length) {
+    return error.na;
+  }
+
   return maxItems;
 };
 
@@ -2626,7 +2631,13 @@ exports.MODE.SNGL = function() {
   if (range instanceof Error) {
     return range;
   }
-  return exports.MODE.MULT(range).sort(function(a, b) {
+
+  var mult = exports.MODE.MULT(range);
+  if (mult instanceof Error) {
+    return error.na;
+  }
+
+  return mult.sort(function(a, b) {
     return a - b;
   })[0];
 };

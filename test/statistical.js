@@ -585,12 +585,14 @@ describe('Statistical', function() {
     modes.should.containEql(2);
     modes.should.containEql(3);
     statistical.MODE.MULT([1, 2, 'invalid']).should.equal(error.value);
+    statistical.MODE.MULT([1, 2, 3]).should.equal(error.na);
   });
 
   it('MODE.SNGL', function() {
     var data = [5.6, 4, 4, 3, 2, 4];
     statistical.MODE.SNGL(data).should.equal(4);
     statistical.MODE.SNGL([1, 2, 'invalid']).should.equal(error.value);
+    statistical.MODE.SNGL([1, 2, 3]).should.equal(error.na);
   });
 
   it('NEGBINOM.DIST', function() {
