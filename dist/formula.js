@@ -351,16 +351,31 @@ exports.arrayEach = function(array, iteratee) {
 };
 
 exports.transpose = function(matrix) {
-  if(!matrix) { 
+  if(!matrix) {
     return error.value;
   }
 
-  return matrix[0].map(function(col, i) { 
-    return matrix.map(function(row) { 
+  return matrix[0].map(function(col, i) {
+    return matrix.map(function(row) {
       return row[i];
     });
   });
 };
+
+exports.fixCriteria = function(criteria) {
+  var match = criteria.match(/^(={1,3}|>=?|<[=>]?|!==?)?(.*)/);
+  var logical = match[1];
+  if (!logical || logical === '=') {
+      logical = '==';
+  } else if (logical === '<>') {
+      logical = '!=';
+  }
+  var value = match[2];
+  if (isNaN(this.parseNumber(value))) {
+    value = '"' + value + '"';
+  }
+  return logical + value;
+}
 
 
 /***/ }),
@@ -1355,14 +1370,24 @@ exports.SUM = function() {
   return result;
 };
 
-exports.SUMIF = function(range, criteria) {
-  range = utils.parseNumberArray(utils.flatten(range));
-  if (range instanceof Error) {
-    return range;
+exports.SUMIF = function(range, criteria, sum_range) {
+  if (arguments.length <= 1) {
+    return error.na;
+  }
+  sum_range = sum_range || range;
+  range = utils.flatten(range);
+  sum_range = utils.parseNumberArray(utils.flatten(sum_range));
+  if (sum_range instanceof Error) {
+    return sum_range;
   }
   var result = 0;
+  criteria = utils.fixCriteria(criteria);
   for (var i = 0; i < range.length; i++) {
-    result += (eval(range[i] + criteria)) ? range[i] : 0; // jshint ignore:line
+    var rangeVal = range[i];
+    if (isNaN(utils.parseNumber(rangeVal))) {
+      rangeVal = '"' + rangeVal + '"';
+    }
+    result += (eval(rangeVal + criteria)) ? sum_range[i] : 0; // jshint ignore:line
   }
   return result;
 };
@@ -1375,41 +1400,26 @@ exports.SUMIFS = function() {
   }
   var criteria = [];
   while (args.length) {
-    var criteriaRange = args.shift();
-    var criteriaCond = args.shift();
-    var match = criteriaCond.match(/^(={1,3}|>=?|<[=>]?|!==?)?(.*)/);
-    var logical = match[1];
-    if (!logical || logical === '=') {
-        logical = '==';
-    } else if (logical === '<>') {
-        logical = '!=';
-    }
-    var value = match[2];
-    if (isNaN(utils.parseNumber(value))) {
-      value = '"' + value + '"';
-    }
-    criteria.push({ range: criteriaRange, condition: logical + value });
+    var criteriaRange =  utils.flatten(args.shift());
+    var criteriaCond = utils.fixCriteria(args.shift());
+    criteria.push({ range: criteriaRange, condition: criteriaCond });
   }
 
-  var n_range_elements = range.length;
-  var n_criterias = criteria.length;
-
   var result = 0;
-  for (var i = 0; i < n_range_elements; i++) {
-    var el = range[i];
+  for (var i = 0; i < range.length; i++) {
     var condition = '';
-    for (var c = 0; c < n_criterias; c++) {
-      var rangeVal = criteria[c].range[i];
+    for (var j = 0; j < criteria.length; j++) {
+      var rangeVal = criteria[j].range[i];
       if (isNaN(utils.parseNumber(rangeVal))) {
         rangeVal = '"' + rangeVal + '"';
       }
-      condition += rangeVal + criteria[c].condition;
-      if (c !== n_criterias - 1) {
+      condition += rangeVal + criteria[j].condition;
+      if (j !== criteria.length - 1) {
         condition += '&&';
       }
     }
     if (eval(condition)) { // jshint ignore:line
-      result += el;
+      result += range[i];
     }
   }
   return result;
@@ -1612,34 +1622,60 @@ exports.AVERAGEIF = function(range, criteria, average_range) {
   }
   average_range = average_range || range;
   range = utils.flatten(range);
-  average_range = utils.parseNumberArray(utils.flatten(average_range));
+  average_range = utils.flatten(average_range);
   if (average_range instanceof Error) {
     return average_range;
   }
   var average_count = 0;
   var result = 0;
+  criteria = utils.fixCriteria(criteria);
   for (var i = 0; i < range.length; i++) {
-    if (eval(range[i] + criteria)) { // jshint ignore:line
+    if (isNaN(utils.parseNumber(average_range[i]))) {
+      continue;
+    }
+
+    var rangeVal = range[i];
+    if (isNaN(utils.parseNumber(rangeVal))) {
+      rangeVal = '"' + rangeVal + '"';
+    }
+    if (eval(rangeVal + criteria)) { // jshint ignore:line
       result += average_range[i];
       average_count++;
     }
+  }
+  if (average_count === 0) {
+    return 0;
   }
   return result / average_count;
 };
 
 exports.AVERAGEIFS = function() {
-  // Does not work with multi dimensional ranges yet!
-  //http://office.microsoft.com/en-001/excel-help/averageifs-function-HA010047493.aspx
   var args = utils.argsToArray(arguments);
-  var criteria = (args.length - 1) / 2;
-  var range = utils.flatten(args[0]);
+  var range = utils.flatten(args.shift());
+  if (range instanceof Error) {
+    return range;
+  }
+  var criteria = [];
+  while (args.length) {
+    var criteriaRange =  utils.flatten(args.shift());
+    var criteriaCond = utils.fixCriteria(args.shift());
+    criteria.push({ range: criteriaRange, condition: criteriaCond });
+  }
+
   var count = 0;
   var result = 0;
   for (var i = 0; i < range.length; i++) {
+    if (isNaN(utils.parseNumber(range[i]))) {
+      continue;
+    }
     var condition = '';
-    for (var j = 0; j < criteria; j++) {
-      condition += args[2 * j + 1][i] + args[2 * j + 2];
-      if (j !== criteria - 1) {
+    for (var j = 0; j < criteria.length; j++) {
+      var rangeVal = criteria[j].range[i];
+      if (isNaN(utils.parseNumber(rangeVal))) {
+        rangeVal = '"' + rangeVal + '"';
+      }
+      condition += rangeVal + criteria[j].condition;
+      if (j !== criteria.length - 1) {
         condition += '&&';
       }
     }
@@ -1963,7 +1999,7 @@ exports.COUNTBLANK = function() {
   var element;
   for (var i = 0; i < range.length; i++) {
     element = range[i];
-    if (element === null || element === '') {
+    if (element === null || element === '' || element === undefined) {
       blanks++;
     }
   }
@@ -1972,19 +2008,15 @@ exports.COUNTBLANK = function() {
 
 exports.COUNTIF = function(range, criteria) {
   range = utils.flatten(range);
-  if (!/[<>=!]/.test(criteria)) {
-    criteria = '=="' + criteria + '"';
-  }
+  criteria = utils.fixCriteria(criteria);
   var matches = 0;
   for (var i = 0; i < range.length; i++) {
-    if (typeof range[i] !== 'string') {
-      if (eval(range[i] + criteria)) { // jshint ignore:line
-        matches++;
-      }
-    } else {
-      if (eval('"' + range[i] + '"' + criteria)) { // jshint ignore:line
-        matches++;
-      }
+    var rangeVal = range[i];
+    if (isNaN(utils.parseNumber(rangeVal))) {
+      rangeVal = '"' + rangeVal + '"';
+    }
+    if (eval(rangeVal + criteria)) { // jshint ignore:line
+      matches++;
     }
   }
   return matches;
@@ -1992,27 +2024,27 @@ exports.COUNTIF = function(range, criteria) {
 
 exports.COUNTIFS = function() {
   var args = utils.argsToArray(arguments);
-  var results = new Array(utils.flatten(args[0]).length);
-  for (var i = 0; i < results.length; i++) {
-    results[i] = true;
+  var criteria = [];
+  while (args.length) {
+    var criteriaRange = utils.flatten(args.shift());
+    var criteriaCond = utils.fixCriteria(args.shift());
+    criteria.push({ range: criteriaRange, condition: criteriaCond });
   }
-  for (i = 0; i < args.length; i += 2) {
-    var range = utils.flatten(args[i]);
-    var criteria = args[i + 1];
-    if (!/[<>=!]/.test(criteria)) {
-      criteria = '=="' + criteria + '"';
-    }
-    for (var j = 0; j < range.length; j++) {
-      if (typeof range[j] !== 'string') {
-        results[j] = results[j] && eval(range[j] + criteria); // jshint ignore:line
-      } else {
-        results[j] = results[j] && eval('"' + range[j] + '"' + criteria); // jshint ignore:line
+
+  var result = 0;
+  for (var i = 0; i < criteria[0].range.length; i++) {
+    var condition = '';
+    for (var j = 0; j < criteria.length; j++) {
+      var rangeVal = criteria[j].range[i];
+      if (isNaN(utils.parseNumber(rangeVal))) {
+        rangeVal = '"' + rangeVal + '"';
+      }
+      condition += rangeVal + criteria[j].condition;
+      if (j !== criteria.length - 1) {
+        condition += '&&';
       }
     }
-  }
-  var result = 0;
-  for (i = 0; i < results.length; i++) {
-    if (results[i]) {
+    if (eval(condition)) { // jshint ignore:line
       result++;
     }
   }
@@ -12071,6 +12103,7 @@ var mathTrig = __webpack_require__(2);
 var statistical = __webpack_require__(3);
 var engineering = __webpack_require__(10);
 var dateTime = __webpack_require__(6);
+var text = __webpack_require__(4);
 
 function set(fn, root) {
   if (root) {
@@ -12093,6 +12126,7 @@ exports.CHIDISTRT = statistical.CHISQ.DIST.RT;
 exports.CHIINV = statistical.CHISQ.INV;
 exports.CHIINVRT = statistical.CHISQ.INV.RT;
 exports.CHITEST = statistical.CHISQ.TEST;
+exports.CONCAT = text.CONCATENATE;
 exports.CONFIDENCE = set(statistical.CONFIDENCE.NORM, statistical.CONFIDENCE);
 exports.COVAR = statistical.COVARIANCE.P;
 exports.COVARIANCEP = statistical.COVARIANCE.P;
