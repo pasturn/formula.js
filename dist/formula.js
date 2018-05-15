@@ -3766,6 +3766,24 @@ exports.VALUE = function(text) {
   return result === void 0 ? 0 : result;
 };
 
+exports.YEN = function(number, decimals) {
+  decimals = (decimals === undefined) ? 2 : decimals;
+
+  number = utils.parseNumber(number);
+  decimals = utils.parseNumber(decimals);
+  if (utils.anyIsError(number, decimals)) {
+    return error.value;
+  }
+  var format = '';
+  if (decimals <= 0) {
+    number = Math.round(number * Math.pow(10, decimals)) / Math.pow(10, decimals);
+    format = '($0,0)';
+  } else if (decimals > 0) {
+    format = '($0,0.' + new Array(decimals + 1).join('0') + ')';
+  }
+  return numbro(number).format(format).replace('$', '¥');
+};
+
 
 /***/ }),
 /* 5 */

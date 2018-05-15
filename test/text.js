@@ -236,4 +236,13 @@ describe('Text', function() {
     text.VALUE('16:48:00').should.equal(60480);
     text.VALUE(true).should.equal(error.value);
   });
+
+  it('YEN', function() {
+    text.YEN(1234.567).should.equal('¥1,234.57');
+    text.YEN(1234.567, -2).should.equal('¥1,200');
+    text.YEN(-1234.567, -2).should.equal('(¥1,200)');
+    text.YEN(-0.123, 4).should.equal('(¥0.1230)');
+    text.YEN(-99.888).should.equal('(¥99.89)');
+    text.YEN('invalid').should.equal(error.value);
+  });
 });
