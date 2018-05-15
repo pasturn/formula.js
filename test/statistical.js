@@ -486,7 +486,8 @@ describe('Statistical', function() {
 
   it('LARGE', function() {
     statistical.LARGE([3, 5, 3, 5, 4], 3).should.equal(4);
-    statistical.LARGE([3, 5, 3, 'invalid', 4], 3).should.equal(error.value);
+    statistical.LARGE([3, 5, 3, 5, 4], -3).should.equal(error.num);
+    statistical.LARGE([3, 5, 3], 5).should.equal(error.num);
   });
 
   it('LINEST', function() {
