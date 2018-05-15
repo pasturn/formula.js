@@ -2729,10 +2729,16 @@ exports.PEARSON = function(data_x, data_y) {
 exports.PERCENTILE = {};
 
 exports.PERCENTILE.EXC = function(array, k) {
-  array = utils.parseNumberArray(utils.flatten(array));
+  array = utils.numbers(utils.flatten(array));
   k = utils.parseNumber(k);
   if (utils.anyIsError(array, k)) {
     return error.value;
+  }
+  if (k <= 0 || k >= 1) {
+    return error.num;
+  }
+  if (!array.length) {
+    return error.num;
   }
   array = array.sort(function(a, b) {
     {
@@ -2904,11 +2910,15 @@ exports.PROB = function(range, probability, lower, upper) {
 exports.QUARTILE = {};
 
 exports.QUARTILE.EXC = function(range, quart) {
-  range = utils.parseNumberArray(utils.flatten(range));
+  range = utils.numbers(utils.flatten(range));
   quart = utils.parseNumber(quart);
   if (utils.anyIsError(range, quart)) {
     return error.value;
   }
+  if (!range.length) {
+    return error.num;
+  }
+  quart = mathTrig.INT(quart);
   switch (quart) {
     case 1:
       return exports.PERCENTILE.EXC(range, 0.25);
@@ -2922,18 +2932,26 @@ exports.QUARTILE.EXC = function(range, quart) {
 };
 
 exports.QUARTILE.INC = function(range, quart) {
-  range = utils.parseNumberArray(utils.flatten(range));
+  range = utils.numbers(utils.flatten(range));
   quart = utils.parseNumber(quart);
   if (utils.anyIsError(range, quart)) {
     return error.value;
   }
+  if (!range.length) {
+    return error.num;
+  }
+  quart = mathTrig.INT(quart);
   switch (quart) {
+    case 0:
+      return exports.MIN(range);
     case 1:
       return exports.PERCENTILE.INC(range, 0.25);
     case 2:
       return exports.PERCENTILE.INC(range, 0.5);
     case 3:
       return exports.PERCENTILE.INC(range, 0.75);
+    case 4:
+      return exports.MAX(range);
     default:
       return error.num;
   }

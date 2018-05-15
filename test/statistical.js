@@ -649,7 +649,6 @@ describe('Statistical', function() {
     statistical.PERCENTILE.EXC([1, 2, 3, 4], 0.8).should.equal(4);
     statistical.PERCENTILE.EXC([1, 2, 3, 4], 0.9).should.equal(error.num);
     statistical.PERCENTILE.EXC([1, 2, 3, 4], 1).should.equal(error.num);
-    statistical.PERCENTILE.EXC([1, 'invalid', 3, 4], 1).should.equal(error.value);
   });
 
   it("PERCENTILE.INC", function() {
@@ -733,7 +732,9 @@ describe('Statistical', function() {
 
   it('QUARTILE.EXC', function() {
     var data = [6, 7, 15, 36, 39, 40, 41, 42, 43, 47, 49];
+    statistical.QUARTILE.EXC(data, 0).should.equal(error.num);
     statistical.QUARTILE.EXC(data, 1).should.equal(15);
+    statistical.QUARTILE.EXC(data, 1.9).should.equal(15);
     statistical.QUARTILE.EXC(data, 2).should.equal(40);
     statistical.QUARTILE.EXC(data, 3).should.equal(43);
     statistical.QUARTILE.EXC(data, 4).should.equal(error.num);
@@ -742,11 +743,15 @@ describe('Statistical', function() {
 
   it('QUARTILE.INC', function() {
     var data = [1, 2, 4, 7, 8, 9, 10, 12];
+    statistical.QUARTILE.INC(data, 0).should.equal(1);
     statistical.QUARTILE.INC(data, 1).should.approximately(3.5, 1e-9);
+    statistical.QUARTILE.INC(data, 1.9).should.approximately(3.5, 1e-9);
     statistical.QUARTILE.INC(data, 2).should.approximately(7.5, 1e-9);
     statistical.QUARTILE.INC(data, 3).should.approximately(9.25, 1e-9);
-    statistical.QUARTILE.INC(data, 4).should.equal(error.num);
+    statistical.QUARTILE.INC(data, 4).should.equal(12);
     statistical.QUARTILE.INC(data, 'invalid').should.equal(error.value);
+    statistical.QUARTILE.INC(data, -1).should.equal(error.num);
+    statistical.QUARTILE.INC(data, 5).should.equal(error.num);
   });
 
   it('RANK.AVG', function() {
