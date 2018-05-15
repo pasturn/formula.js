@@ -811,7 +811,8 @@ describe('Statistical', function() {
 
   it('SMALL', function() {
     statistical.SMALL([3, 4, 5, 2, 3, 4, 6, 4, 7], 4).should.equal(4);
-    statistical.SMALL([3, 4, 5, 2, 'invalid', 4, 6, 4, 7], 4).should.equal(error.value);
+    statistical.SMALL([3, 5, 3, 5, 4], -3).should.equal(error.num);
+    statistical.SMALL([3, 5, 3], 5).should.equal(error.num);
   });
 
   it('STANDARDIZE', function() {
