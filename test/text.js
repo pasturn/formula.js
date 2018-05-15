@@ -63,6 +63,9 @@ describe('Text', function() {
     text.FIND('M', data, 3).should.equal(8);
     text.FIND('M').should.equal(error.na);
     text.FIND().should.equal(error.na);
+    text.FIND('M', data, 0).should.equal(error.value);
+    text.FIND('M', data, 17).should.equal(error.value);
+    text.FIND('u', data).should.equal(error.value);
   });
 
   it('FIXED', function() {
@@ -107,6 +110,8 @@ describe('Text', function() {
     text.MID(data, 7, 20).should.equal('Flow');
     text.MID(data, 20, 50).should.equal('');
     text.MID(0).should.equal(error.value);
+    text.MID(data, 0, 5).should.equal(error.value);
+    text.MID(data, 1, -1).should.equal(error.value);
   });
 
   it('NUMBERVALUE', function() {
