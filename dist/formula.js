@@ -2749,10 +2749,16 @@ exports.PERCENTILE.EXC = function(array, k) {
 };
 
 exports.PERCENTILE.INC = function(array, k) {
-  array = utils.parseNumberArray(utils.flatten(array));
+  array = utils.numbers(utils.flatten(array));
   k = utils.parseNumber(k);
   if (utils.anyIsError(array, k)) {
     return error.value;
+  }
+  if (k < 0 || k > 1) {
+    return error.num;
+  }
+  if (!array.length) {
+    return error.num;
   }
   array = array.sort(function(a, b) {
     return a - b;

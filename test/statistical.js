@@ -666,7 +666,8 @@ describe('Statistical', function() {
     statistical.PERCENTILE.INC([1, 2, 3, 4], 0.8).should.approximately(3.4, 1e-9);
     statistical.PERCENTILE.INC([1, 2, 3, 4], 0.9).should.approximately(3.7, 1e-9);
     statistical.PERCENTILE.INC([1, 2, 3, 4], 1).should.equal(4);
-    statistical.PERCENTILE.INC([1, 2, 'invalid', 4], 1).should.equal(error.value);
+    statistical.PERCENTILE.INC([1, 2, 3, 4], -1).should.equal(error.num);
+    statistical.PERCENTILE.INC([1, 2, 3, 4], 1.1).should.equal(error.num);
   });
 
   it("PERCENTRANK.EXC", function() {
