@@ -162,6 +162,10 @@ describe('Text', function() {
     text.REPLACE('2009', 3, 2, '10').should.equal('2010');
     text.REPLACE('123456', 1, 3, '@').should.equal('@456');
     text.REPLACE().should.equal(error.value);
+    text.REPLACE('abcdefghijk', 0, 5, '*').should.equal(error.value);
+    text.REPLACE('abcdefghijk', 6, -5, '*').should.equal(error.value);
+    text.REPLACE('abcdefghijk', 6.5, 5, '*').should.equal('abcde*k');
+    text.REPLACE('abcdefghijk', 6, 5.5, '*').should.equal('abcde*k');
   });
 
   it('REPT', function() {
@@ -188,6 +192,9 @@ describe('Text', function() {
     text.SEARCH(true, 'bool').should.equal(error.value);
     text.SEARCH("foo", "bar").should.equal(error.value);
     text.SEARCH("ba", "bar").should.equal(1);
+    text.SEARCH('e', 'Statements', 0).should.equal(error.value);
+    text.SEARCH('e', 'Statements', 11).should.equal(error.value);
+    text.SEARCH('x', 'Statements', 6).should.equal(error.value);
   });
 
   it('SPLIT', function() {

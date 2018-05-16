@@ -3634,6 +3634,7 @@ exports.PRONETIC = function() {
   throw new Error('PRONETIC is not implemented');
 };
 
+// TODO different from Excel
 exports.PROPER = function(text) {
   if (text === undefined || text.length === 0) {
     return error.value;
@@ -3687,6 +3688,11 @@ exports.REPLACE = function(text, position, length, new_text) {
     typeof new_text !== 'string') {
     return error.value;
   }
+  if (position <= 0 || length < 0) {
+    return error.value;
+  }
+  position = Math.floor(position);
+  length = Math.floor(length);
   return text.substr(0, position - 1) + new_text + text.substr(position - 1 + length);
 };
 
@@ -3724,9 +3730,18 @@ exports.SEARCH = function(find_text, within_text, position) {
   if (typeof find_text !== 'string' || typeof within_text !== 'string') {
     return error.value;
   }
-  position = (position === undefined) ? 0 : position;
-  foundAt = within_text.toLowerCase().indexOf(find_text.toLowerCase(), position - 1)+1;
-  return (foundAt === 0)?error.value:foundAt;
+  position = (position === undefined) ? 1 : utils.parseNumber(position);
+  if (position <= 0) {
+    return error.value;
+  }
+  if (within_text.length < position) {
+    return error.value;
+  }
+  var index = within_text.toLowerCase().indexOf(find_text.toLowerCase(), position - 1);
+  if (index === -1) {
+    return error.value;
+  }
+  return index + 1;
 };
 
 exports.SPLIT = function (text, separator) {
