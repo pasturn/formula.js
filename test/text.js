@@ -165,6 +165,10 @@ describe('Text', function() {
   it('REPT', function() {
     text.REPT('multiple ', 3).should.equal('multiple multiple multiple ');
     text.REPT('m').should.equal(error.value);
+    text.REPT('multiple ', -3).should.equal(error.value);
+    text.REPT('multiple ', 0).should.equal('');
+    text.REPT('multiple ', 3.8).should.equal('multiple multiple multiple ');
+    text.REPT('multiple ', 3650).should.equal(error.value);
   });
 
   it('RIGHT', function() {
