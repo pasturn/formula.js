@@ -87,6 +87,8 @@ describe('Text', function() {
     text.LEFT('Sale Price', 4).should.equal('Sale');
     text.LEFT('Sweeden').should.equal('S');
     text.LEFT(3).should.equal(error.value);
+    text.LEFT('Sale Price', -4).should.equal(error.value);
+    text.LEFT('Sale Price', 4.5).should.equal('Sale');
   });
 
   it('LEN', function() {
@@ -176,6 +178,8 @@ describe('Text', function() {
     text.RIGHT('Stock Number').should.equal('r');
     text.RIGHT('something', 'invalid').should.equal(error.value);
     text.RIGHT().should.equal(error.na);
+    text.RIGHT('Sale Price', -1).should.equal(error.value);
+    text.RIGHT('Sale Price', 5.5).should.equal('Price');
   });
 
   it('SEARCH', function() {
