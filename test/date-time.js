@@ -5,11 +5,8 @@ require('should');
 
 describe('Date & Time', function() {
   it('DATE', function() {
-    var date = dateTime.DATE(1900, 1, 1);
-    date.getFullYear().should.equal(1900);
-    date.getMonth().should.equal(1 - 1);
-    date.getDay().should.equal(1);
-
+    dateTime.DATE(1900, 1, 1).should.equal(1);
+    dateTime.DATE(1900, 3, 2).should.equal(62);
     dateTime.DATE(1900, 1, -1).should.equal(error.num);
     dateTime.DATE('invalid').should.equal(error.value);
   });
@@ -17,8 +14,16 @@ describe('Date & Time', function() {
   it('DATEVALUE', function() {
     dateTime.DATEVALUE('1/1/1900').should.equal(1);
     dateTime.DATEVALUE('12/31/9999').should.equal(2958465);
+    dateTime.DATEVALUE('22-MAY-2011').should.equal(40685);
     dateTime.DATEVALUE('foo bar').should.equal(error.value);
     dateTime.DATEVALUE(1).should.equal(error.value);
+  });
+
+  it('DATESTRING', function() {
+    dateTime.DATESTRING(1).should.equal('1900-01-01');
+    dateTime.DATESTRING(39448).should.equal('2008-01-01');
+    dateTime.DATESTRING(-1).should.equal(error.num);
+    dateTime.DATESTRING('a').should.equal(error.value);
   });
 
   it('DAY', function() {
@@ -58,6 +63,7 @@ describe('Date & Time', function() {
     dateTime.EDATE('1/1/1900', 0).should.equal(1);
     dateTime.EDATE('1/1/1900', 1).should.equal(32);
     dateTime.EDATE('1/1/1900', 12).should.equal(367);
+    dateTime.EDATE('15-Jan-11', -1).should.equal(40527);
     dateTime.EDATE('a', 0).should.equal(error.value);
     dateTime.EDATE('1/1/1900', 'a').should.equal(error.value);
   });
@@ -66,6 +72,7 @@ describe('Date & Time', function() {
     dateTime.EOMONTH('1/1/1900', 0).should.equal(31);
     dateTime.EOMONTH('1/1/1900', 1).should.equal(59);
     dateTime.EOMONTH('1/1/1900', 12).should.equal(397);
+    dateTime.EOMONTH('1-Jan-11', -3).should.equal(40482);
     dateTime.EOMONTH('a', 0).should.equal(error.value);
     dateTime.EOMONTH('1/1/1900', 'a').should.equal(error.value);
   });
@@ -73,8 +80,10 @@ describe('Date & Time', function() {
   it('HOUR', function() {
     dateTime.HOUR('1/1/1900').should.equal(0);
     dateTime.HOUR('1/1/1900 1:00').should.equal(1);
-    // dateTime.HOUR('1:00').should.equal(1);
-    // dateTime.HOUR('0.75').should.equal(18);
+    dateTime.HOUR('1:00').should.equal(1);
+    dateTime.HOUR('0.75').should.equal(18);
+    dateTime.HOUR(0.75).should.equal(18);
+    dateTime.HOUR(0.322916666666667).should.equal(7);
     dateTime.HOUR('a').should.equal(error.value);
   });
 
@@ -84,24 +93,35 @@ describe('Date & Time', function() {
     dateTime.INTERVAL('10000000').should.equal('P3M25DT17H46M40S');
   });
 
+  it('ISODATESTRING', function() {
+    dateTime.ISODATESTRING(1).should.equal(new Date('1900/01/01').toISOString());
+    dateTime.ISODATESTRING(39448.375).should.equal(new Date('2008/01/01 09:00:00').toISOString());
+    dateTime.ISODATESTRING(-1).should.equal(error.num);
+    dateTime.ISODATESTRING('a').should.equal(error.value);
+  });
+
   it('ISOWEEKNUM', function() {
     dateTime.ISOWEEKNUM('1/1/1901').should.equal(1);
     dateTime.ISOWEEKNUM('1/8/1901').should.equal(2);
     dateTime.ISOWEEKNUM('12/29/1901').should.equal(52);
     dateTime.ISOWEEKNUM('6/6/1902').should.equal(23);
+    dateTime.ISOWEEKNUM('2012/3/9').should.equal(10);
     dateTime.ISOWEEKNUM('a').should.equal(error.value);
   });
 
   it('MINUTE', function() {
     dateTime.MINUTE('1/1/1901').should.equal(0);
     dateTime.MINUTE('1/1/1901 1:01').should.equal(1);
-    // dateTime.MINUTE('1:01').should.equal(1);
+    dateTime.MINUTE('1:01').should.equal(1);
+    dateTime.MINUTE(0.53125).should.equal(45);
     dateTime.MINUTE('a').should.equal(error.value);
   });
 
   it('MONTH', function() {
     dateTime.MONTH('1/1/1900').should.equal(1);
     dateTime.MONTH('12/1/1900').should.equal(12);
+    dateTime.MONTH('15-Apr-11').should.equal(4);
+    dateTime.MONTH(40648).should.equal(4);
     dateTime.MONTH('a').should.equal(error.value);
   });
 
@@ -125,16 +145,21 @@ describe('Date & Time', function() {
   it('NETWORKDAYS.INTL', function() {
     dateTime.NETWORKDAYS.INTL('12/4/2013', '12/5/2013').should.equal(2);
     dateTime.NETWORKDAYS.INTL('12/8/2013', '12/9/2013', 2).should.equal(0);
+    dateTime.NETWORKDAYS.INTL('2/28/2006', '1/31/2006').should.equal(-21);
+    dateTime.NETWORKDAYS.INTL('1/1/2006', '2/1/2006', '0010001', ['2006/1/2', '2006/1/16']).should.equal(20);
     dateTime.NETWORKDAYS.INTL('12/4/2013', '12/4/2013', -1).should.equal(error.value);
+    dateTime.NETWORKDAYS.INTL('12/4/2013', '12/4/2013', 0).should.equal(error.value);
   });
 
   it('NOW', function() {
-    dateTime.NOW().should.instanceof(Date);
+    dateTime.NOW().should.type('number');
   });
 
   it('SECOND', function() {
     dateTime.SECOND('1/1/1900').should.equal(0);
     dateTime.SECOND('1/1/1900 1:00:01').should.equal(1);
+    dateTime.SECOND('1:00:29').should.equal(29);
+    dateTime.SECOND(0.700208333333333).should.equal(18);
     dateTime.SECOND('a').should.equal(error.value);
   });
 
@@ -145,19 +170,33 @@ describe('Date & Time', function() {
     dateTime.TIME('invalid').should.equal(error.value);
   });
 
+  it('TIMESTRING', function() {
+    dateTime.TIMESTRING(0.5).should.equal('12:00:00');
+    dateTime.TIMESTRING(43237.0231481481481482).should.equal('00:33:20');
+    dateTime.TIMESTRING(43237.520833333333333).should.equal('12:30:00');
+    dateTime.TIMESTRING(-1).should.equal(error.num);
+    dateTime.TIMESTRING('invalid').should.equal(error.value);
+  });
+
   it('TIMEVALUE', function() {
     dateTime.TIMEVALUE('1/1/1900 00:00:00').should.equal(0);
     dateTime.TIMEVALUE('1/1/1900 12:00:00').should.approximately(0.5, 1e-9);
+    dateTime.TIMEVALUE('12:00:00').should.approximately(0.5, 1e-9);
     dateTime.TIMEVALUE('a').should.equal(error.value);
   });
 
   it('TODAY', function() {
-    dateTime.TODAY().should.instanceof(Date);
+    dateTime.TODAY().should.type('number');
   });
 
   it('WEEKDAY', function() {
     dateTime.WEEKDAY('1/1/1901').should.equal(3);
     dateTime.WEEKDAY('1/1/1901', 2).should.equal(2);
+    dateTime.WEEKDAY(39492).should.equal(5);
+    dateTime.WEEKDAY(39492, 2).should.equal(4);
+    dateTime.WEEKDAY(39492, 3).should.equal(3);
+    dateTime.WEEKDAY(39492, 4).should.equal(error.value);
+    dateTime.WEEKDAY(39492, 21).should.equal(error.value);
     dateTime.WEEKDAY('a').should.equal(error.value);
   });
 
@@ -166,13 +205,15 @@ describe('Date & Time', function() {
     dateTime.WEEKNUM('2/1/1900').should.equal(5);
     dateTime.WEEKNUM('2/1/1909', 2).should.equal(6);
     dateTime.WEEKNUM('1/1/1901', 21).should.equal(1);
+    dateTime.WEEKNUM(40977).should.equal(10);
+    dateTime.WEEKNUM(40977,2).should.equal(11);
     dateTime.WEEKNUM('a').should.equal(error.value);
   });
 
   it('WORKDAY', function() {
-    dateTime.WORKDAY('1/1/1900', 1).getDate().should.equal(2);
-    dateTime.WORKDAY('1/1/1900', 7).getDate().should.equal(10);
-    dateTime.WORKDAY('1/1/1900', 2, '1/2/1900').getDate().should.equal(4);
+    dateTime.WORKDAY('2008/10/1', 151).should.equal(39933);
+    dateTime.WORKDAY(39722, 151).should.equal(39933);
+    dateTime.WORKDAY('2008/10/1', 151, ['2008/11/26', '2008/12/4', '2009/1/21']).should.equal(39938);
     dateTime.WORKDAY('a', 1, '1/2/1900').should.equal(error.value);
     dateTime.WORKDAY('1/1/1900', 'a').should.equal(error.value);
     dateTime.WORKDAY('1/1/1900', 1, 'a').should.equal(error.value);
@@ -180,13 +221,15 @@ describe('Date & Time', function() {
   });
 
   it('WORKDAY.INTL', function() {
-    dateTime.WORKDAY.INTL('1/1/1900', 1).getDate().should.equal(2);
-    dateTime.WORKDAY.INTL('1/1/1905', 1, 2).getDate().should.equal(3);
+    dateTime.WORKDAY.INTL('1/1/2012', 90, 11).should.equal(41013);
+    dateTime.WORKDAY.INTL('1/1/2012', 30, 17).should.equal(40944);
     dateTime.WORKDAY.INTL('1/1/1900', 1, 'a').should.equal(error.value);
+    dateTime.WORKDAY.INTL('1/1/1900', 1, 0).should.equal(error.value);
   });
 
   it('YEAR', function() {
     dateTime.YEAR('1/1/1900').should.equal(1900);
+    dateTime.YEAR(39933).should.equal(2009);
     dateTime.YEAR('a').should.equal(error.value);
   });
 

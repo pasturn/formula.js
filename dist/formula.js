@@ -253,14 +253,14 @@ exports.parseDate = function(date) {
     if (date instanceof Date) {
       return new Date(date);
     }
-    var d = parseInt(date, 10);
-    if (d < 0) {
+
+    if (date < 0) {
       return error.num;
     }
-    if (d <= 60) {
-      return new Date(d1900.getTime() + (d - 1) * 86400000);
+    if (date <= 60) {
+      return new Date(d1900.getTime() + (date - 1) * 86400000);
     }
-    return new Date(d1900.getTime() + (d - 2) * 86400000);
+    return new Date(d1900.getTime() + (date - 2) * 86400000);
   }
   if (typeof date === 'string') {
     date = new Date(date);
@@ -4028,7 +4028,8 @@ var WEEKEND_TYPES = [
   [5, 6],
   undefined,
   undefined,
-  undefined, [0, 0],
+  undefined,
+  [0, 0],
   [1, 1],
   [2, 2],
   [3, 3],
@@ -4045,17 +4046,26 @@ exports.DATE = function(year, month, day) {
   day = utils.parseNumber(day);
 
   if (utils.anyIsError(year, month, day)) {
-    result = error.value;
+    return error.value;
+  }
+  if (year < 0 || month < 0 || day < 0) {
+    return error.num;
+  }
+  year = parseInt(year, 10);
+  month = parseInt(month, 10);
+  day = parseInt(day, 10);
 
-  } else if (year < 0 || month < 0 || day < 0) {
-    result = error.num;
+  return serial(new Date(year, month - 1, day));
+};
 
-  } else {
-    result = new Date(year, month - 1, day);
+exports.DATESTRING = function(serial_number) {
+  var date = utils.parseDate(serial_number);
+  if (date instanceof Error) {
+    return date;
   }
 
-  return result;
-};
+  return date.getFullYear() + '-' + ('0' + (date.getMonth() + 1)).substr(-2) + '-' + ('0' + date.getDate()).substr(-2);
+}
 
 exports.DATEVALUE = function(date_text) {
   if (typeof date_text !== 'string') {
@@ -4167,13 +4177,16 @@ exports.EOMONTH = function(start_date, months) {
 };
 
 exports.HOUR = function(serial_number) {
-  serial_number = utils.parseDate(serial_number);
+  var date = utils.parseDate(serial_number);
 
-  if (serial_number instanceof Error) {
-    return serial_number;
+  if (date instanceof Error) {
+    if (typeof serial_number !== 'string' || !serial_number.match(/^[0-9]{1,2}:[0-9]{1,2}(:[0-9]{1,2})?$/)) {
+      return date;
+    }
+    date = new Date('1/1/1900 ' + serial_number);
   }
 
-  return serial_number.getHours();
+  return date.getHours();
 };
 
 exports.INTERVAL = function (second) {
@@ -4206,6 +4219,15 @@ exports.INTERVAL = function (second) {
   return 'P' + year + month + day + 'T' + hour + min + sec;
 };
 
+exports.ISODATESTRING = function(serial_number) {
+  var date = utils.parseDate(serial_number);
+  if (date instanceof Error) {
+    return date;
+  }
+
+  return date.toISOString();
+}
+
 exports.ISOWEEKNUM = function(date) {
   date = utils.parseDate(date);
 
@@ -4221,13 +4243,16 @@ exports.ISOWEEKNUM = function(date) {
 };
 
 exports.MINUTE = function(serial_number) {
-  serial_number = utils.parseDate(serial_number);
+  var date = utils.parseDate(serial_number);
 
-  if (serial_number instanceof Error) {
-    return serial_number;
+  if (date instanceof Error) {
+    if (typeof serial_number !== 'string' || !serial_number.match(/^[0-9]{1,2}:[0-9]{1,2}(:[0-9]{1,2})?$/)) {
+      return date;
+    }
+    date = new Date('1/1/1900 ' + serial_number);
   }
 
-  return serial_number.getMinutes();
+  return date.getMinutes();
 };
 
 exports.MONTH = function(serial_number) {
@@ -4257,6 +4282,16 @@ exports.NETWORKDAYS.INTL = function(start_date, end_date, weekend, holidays) {
   }
   if (weekend === undefined) {
     weekend = WEEKEND_TYPES[1];
+  } else if (typeof weekend === 'string' && weekend.match(/^[01]{7}$/)) {
+    var weekends = [];
+    for (var i = 0; i < weekend.length; i++) {
+      if (weekend.charAt(i) === '1') {
+        weekends.push(i === 6 ? 0 : i + 1);
+      }
+    }
+    weekend = weekends;
+  } else if (weekend === 0) {
+    return error.value;
   } else {
     weekend = WEEKEND_TYPES[weekend];
   }
@@ -4269,20 +4304,32 @@ exports.NETWORKDAYS.INTL = function(start_date, end_date, weekend, holidays) {
     holidays = [holidays];
   }
 
-  for (var i = 0; i < holidays.length; i++) {
+  for (i = 0; i < holidays.length; i++) {
     var h = utils.parseDate(holidays[i]);
     if (h instanceof Error) {
       return h;
     }
     holidays[i] = h;
   }
-  var days = (end_date - start_date) / (1000 * 60 * 60 * 24) + 1;
+  var neg = false;
+  var start, end;
+  if (end_date < start_date) {
+    neg = true;
+    start = end_date;
+    end = start_date;
+  } else {
+    start = start_date;
+    end = end_date;
+  }
+  var days = (end - start) / (1000 * 60 * 60 * 24) + 1;
   var total = days;
-  var day = start_date;
+  var day = start;
+
+
   for (i = 0; i < days; i++) {
     var d = (new Date().getTimezoneOffset() > 0) ? day.getUTCDay() : day.getDay();
     var dec = false;
-    if (d === weekend[0] || d === weekend[1]) {
+    if (weekend.includes(d)) {
       dec = true;
     }
     for (var j = 0; j < holidays.length; j++) {
@@ -4300,20 +4347,23 @@ exports.NETWORKDAYS.INTL = function(start_date, end_date, weekend, holidays) {
     day.setDate(day.getDate() + 1);
   }
 
-  return total;
+  return neg ? total * -1 : total;
 };
 
 exports.NOW = function() {
-  return new Date();
+  return serial(new Date());
 };
 
 exports.SECOND = function(serial_number) {
-  serial_number = utils.parseDate(serial_number);
-  if (serial_number instanceof Error) {
-    return serial_number;
+  var date = utils.parseDate(serial_number);
+  if (date instanceof Error) {
+    if (typeof serial_number !== 'string' || !serial_number.match(/^[0-9]{1,2}:[0-9]{1,2}(:[0-9]{1,2})?$/)) {
+      return date;
+    }
+    date = new Date('1/1/1900 ' + serial_number);
   }
 
-  return serial_number.getSeconds();
+  return date.getSeconds();
 };
 
 exports.TIME = function(hour, minute, second) {
@@ -4330,18 +4380,30 @@ exports.TIME = function(hour, minute, second) {
   return (3600 * hour + 60 * minute + second) / 86400;
 };
 
-exports.TIMEVALUE = function(time_text) {
-  time_text = utils.parseDate(time_text);
+exports.TIMESTRING = function(serial_number) {
+    var date = utils.parseDate(serial_number);
+    if (date instanceof Error) {
+      return date;
+    }
 
-  if (time_text instanceof Error) {
-    return time_text;
+    return ('0' + date.getHours()).substr(-2) + ':' + ('0' + date.getMinutes()).substr(-2) + ':' + ('0' + date.getSeconds()).substr(-2);
+}
+
+exports.TIMEVALUE = function(time_text) {
+  var date = utils.parseDate(time_text);
+
+  if (date instanceof Error) {
+    if (typeof time_text !== 'string' || !time_text.match(/^[0-9]{1,2}:[0-9]{1,2}(:[0-9]{1,2})?$/)) {
+      return date;
+    }
+    date = new Date('1/1/1900 ' + time_text);
   }
 
-  return (3600 * time_text.getHours() + 60 * time_text.getMinutes() + time_text.getSeconds()) / 86400;
+  return (3600 * date.getHours() + 60 * date.getMinutes() + date.getSeconds()) / 86400;
 };
 
 exports.TODAY = function() {
-  return new Date();
+  return parseInt(serial(new Date()), 10);
 };
 
 exports.WEEKDAY = function(serial_number, return_type) {
@@ -4351,7 +4413,16 @@ exports.WEEKDAY = function(serial_number, return_type) {
   }
   if (return_type === undefined) {
     return_type = 1;
+  } else {
+    return_type = utils.parseNumber(return_type);
   }
+  if (return_type instanceof Error) {
+    return return_type;
+  }
+  if (return_type < 1 || (return_type > 3 && return_type < 11) || return_type > 17) {
+    return error.value;
+  }
+  return_type = Math.floor(return_type);
   var day = serial_number.getDay();
 
   return WEEK_TYPES[return_type][day];
@@ -4364,6 +4435,14 @@ exports.WEEKNUM = function(serial_number, return_type) {
   }
   if (return_type === undefined) {
     return_type = 1;
+  } else {
+    return_type = utils.parseNumber(return_type);
+  }
+  if (return_type instanceof Error) {
+    return return_type;
+  }
+  if (return_type < 1 || (return_type > 2 && return_type < 11) || (return_type > 17 && return_type < 21) || return_type > 21) {
+    return error.value;
   }
   if (return_type === 21) {
     return this.ISOWEEKNUM(serial_number);
@@ -4394,6 +4473,16 @@ exports.WORKDAY.INTL = function(start_date, days, weekend, holidays) {
   }
   if (weekend === undefined) {
     weekend = WEEKEND_TYPES[1];
+  } else if (typeof weekend === 'string' && weekend.match(/^[01]{7}$/)) {
+    var weekends = [];
+    for (var i = 0; i < weekend.length; i++) {
+      if (weekend.charAt(i) === '1') {
+        weekends.push(i === 6 ? 0 : i + 1);
+      }
+    }
+    weekend = weekends;
+  } else if (weekend === 0) {
+    return error.value;
   } else {
     weekend = WEEKEND_TYPES[weekend];
   }
@@ -4416,7 +4505,7 @@ exports.WORKDAY.INTL = function(start_date, days, weekend, holidays) {
   while (d < days) {
     start_date.setDate(start_date.getDate() + 1);
     var day = start_date.getDay();
-    if (day === weekend[0] || day === weekend[1]) {
+    if (weekend.includes(day)) {
       continue;
     }
     for (var j = 0; j < holidays.length; j++) {
@@ -4431,7 +4520,7 @@ exports.WORKDAY.INTL = function(start_date, days, weekend, holidays) {
     d++;
   }
 
-  return start_date;
+  return serial(start_date);
 };
 
 exports.YEAR = function(serial_number) {
@@ -4517,6 +4606,8 @@ exports.YEARFRAC = function(start_date, end_date, basis) {
     case 4:
       // European 30/360
       return ((ed + em * 30 + ey * 360) - (sd + sm * 30 + sy * 360)) / 360;
+    default:
+      return error.value;
   }
 };
 
