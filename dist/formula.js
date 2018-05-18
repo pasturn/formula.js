@@ -10642,10 +10642,11 @@ var numbro = __webpack_require__(7);
 var error = __webpack_require__(0);
 
 exports.UNIQUE = function () {
+  var args = utils.flatten(arguments);
   var result = [];
-  for (var i = 0; i < arguments.length; ++i) {
+  for (var i = 0; i < args.length; ++i) {
     var hasElement = false;
-    var element    = arguments[i];
+    var element    = args[i];
 
     // Check if we've already seen this element.
     for (var j = 0; j < result.length; ++j) {
