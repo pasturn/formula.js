@@ -3783,6 +3783,28 @@ exports.TEXT = function(value, format) {
   return numbro(value).format(format);
 };
 
+exports.TEXTJOIN = function() {
+  if (arguments.length < 3)  {
+    return error.na;
+  }
+  var delimiter = arguments[0];
+  var ignore_empty = utils.parseBool(arguments[1]);
+  if (ignore_empty instanceof Error) {
+    return ignore_empty;
+  }
+  var args = Array.prototype.slice.call(arguments);
+  var strs = utils.flatten(args.slice(2));
+  var result = '';
+  for (var i = 0; i < strs.length; i++) {
+    if (!strs[i] && ignore_empty) {
+      continue;
+    }
+    result = result ? result + delimiter + strs[i] : strs[i];
+  }
+
+  return result;
+};
+
 exports.TRIM = function(text) {
   if (typeof text !== 'string') {
     return error.value;

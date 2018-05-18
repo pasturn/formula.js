@@ -226,6 +226,13 @@ describe('Text', function() {
     text.TEXT().should.equal(error.na);
   });
 
+  it('TEXTJOIN', function() {
+    text.TEXTJOIN(' ', true, 'The', 'sun', 'will', 'come', 'up', 'tomorrow.').should.equal('The sun will come up tomorrow.');
+    text.TEXTJOIN(' ', true, ['The', 'sun', 'will', 'come', 'up', 'tomorrow.']).should.equal('The sun will come up tomorrow.');
+    text.TEXTJOIN(' ', 'invalid', 'The', 'sun', 'will', 'come', 'up', 'tomorrow.').should.equal(error.value);
+    text.TEXTJOIN().should.equal(error.na);
+  });
+
   it('TRIM', function() {
     text.TRIM(' more  spaces ').should.equal('more spaces');
     text.TRIM(true).should.equal(error.value);
