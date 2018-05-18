@@ -4303,6 +4303,7 @@ exports.NETWORKDAYS.INTL = function(start_date, end_date, weekend, holidays) {
   } else if (!(holidays instanceof Array)) {
     holidays = [holidays];
   }
+  holidays = utils.flatten(holidays);
 
   for (i = 0; i < holidays.length; i++) {
     var h = utils.parseDate(holidays[i]);
@@ -4494,6 +4495,7 @@ exports.WORKDAY.INTL = function(start_date, days, weekend, holidays) {
   } else if (!(holidays instanceof Array)) {
     holidays = [holidays];
   }
+  holidays = utils.flatten(holidays);
   for (var i = 0; i < holidays.length; i++) {
     var h = utils.parseDate(holidays[i]);
     if (h instanceof Error) {

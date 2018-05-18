@@ -137,6 +137,7 @@ describe('Date & Time', function() {
     dateTime.NETWORKDAYS('12/4/2013', '12/4/2013').should.equal(1);
     dateTime.NETWORKDAYS('12/4/2013', '1/4/2014', '1/1/2014').should.equal(22);
     dateTime.NETWORKDAYS('12/4/2013', '1/4/2014', ['1/1/2014', '1/2/2014', '1/3/2014']).should.equal(20);
+    dateTime.NETWORKDAYS('12/4/2013', '1/4/2014', [['1/1/2014'], ['1/2/2014'], ['1/3/2014']]).should.equal(20);
     dateTime.NETWORKDAYS('a', '1/2/1900').should.equal(error.value);
     dateTime.NETWORKDAYS('1/1/1900', 'a').should.equal(error.value);
     dateTime.NETWORKDAYS('1/1/1900', '2/1/1900', 'a').should.equal(error.value);
@@ -214,6 +215,7 @@ describe('Date & Time', function() {
     dateTime.WORKDAY('2008/10/1', 151).should.equal(39933);
     dateTime.WORKDAY(39722, 151).should.equal(39933);
     dateTime.WORKDAY('2008/10/1', 151, ['2008/11/26', '2008/12/4', '2009/1/21']).should.equal(39938);
+    dateTime.WORKDAY('2008/10/1', 151, [['2008/11/26'], ['2008/12/4'], ['2009/1/21']]).should.equal(39938);
     dateTime.WORKDAY('a', 1, '1/2/1900').should.equal(error.value);
     dateTime.WORKDAY('1/1/1900', 'a').should.equal(error.value);
     dateTime.WORKDAY('1/1/1900', 1, 'a').should.equal(error.value);
